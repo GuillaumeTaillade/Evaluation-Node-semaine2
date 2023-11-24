@@ -1,5 +1,7 @@
+import {readFileSync, writeFileSync} from "node:fs";
+import {join} from "node:path";
 import crypto from "crypto";
-import userSchema from "../modeles/userModele.js"
+import User from "../modeles/userModele.js"
 
 
 
@@ -12,8 +14,8 @@ import userSchema from "../modeles/userModele.js"
 
 //     try {
 //         const user= new userSchema({
-//             firstName :req.body.firstName,  
-//             lastName  :req.body.lastName,
+//             firstname :req.body.firstname,  
+//             lastname  :req.body.lastname,
 //             email :req.body.email, 
 //             password  :hash
 //         });
@@ -25,42 +27,55 @@ import userSchema from "../modeles/userModele.js"
 //         (error => res.status(500).json({ error }))
 //     } ;
 // };
-    
-const signup = async (req, res) =>{
-    const { firstName, lastName, email, password } = req.body;
+const cwd = process.cwd()
+const htmlPath = join(cwd, 'views')
 
-    const secret = process.env.Secret_Crypto
-    const sha256Hasher = crypto.createHmac("sha256", secret );
-    const hashedPassword = sha256Hasher.update(password);
+const viewSignup = (req, res) => {
+    try {
+        let html = readFileSync(join(htmlPath, 'signup.html'), 'utf8');
+        res.status(200).send(html); // Utilisez res.send pour envoyer du HTML brut
+    } catch(err) {
+        res.status(404).send('Page not found');
+    }
+};
+    
+const signup = async (req, res) => {
+    const { firstname, lastname, email, password } = req.body;
+    console.log(firstname)
 
     // Vérifiez si tous les champs sont renseignés
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ error: 'Tous les champs sont obligatoires.' });
+    if (!firstname || !lastname || !email || !password) {
+        return res.status(400).json({ error: 'Tous les champs sont obligatoires.' });
     }
-  
+
     // Vérifiez si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
-      return res.status(400).json({ error: 'Cet utilisateur existe déjà.' });
+        return res.status(400).json({ error: 'Cet utilisateur existe déjà.' });
     }
-  
-    // Créez un nouvel utilisateur
-    const newUser = new User({
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      password: hashedPassword
-    });
-  
-    // Sauvegarde dans la base de données
-    newUser.save((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Une erreur est survenue lors de l\'enregistrement.' });
-      }
-      res.status(201).json({ message: 'Utilisateur enregistré avec succès.' });
-    });
-}
+
+    // Hashage du mot de passe
+    const secret = process.env.Secret_Crypto;
+    const sha256Hasher = crypto.createHmac("sha256", secret);
+    const hashedPassword = sha256Hasher.update(password).digest('hex');
+
+    try {
+        // Créez un nouvel utilisateur
+        const newUser = new User({
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            password: hashedPassword
+        });
+
+        res.status(201).json({ message: 'Utilisateur enregistré avec succès.' });
+        res.redirect(`/dashboard`)
+    } catch (err) {
+        res.status(500).json({ error: 'Une erreur est survenue lors de l\'enregistrement.' });
+    }
+};
 
 export default {
-    signup
+    signup,
+    viewSignup
 }
