@@ -57,29 +57,42 @@ const viewLogin = (req, res) => {
 };
     
 
-// const login = (req,res) => {
-//     const {email, password} = req.body
-//     const {email: e, password: p} = user
+const login = async (req, res) => {
+    const { email, password } = req.body;
+    const secret = process.env.Secret_Crypto;
 
-//     req.session.auth = false
+    // Vérifiez si tous les champs sont renseignés
+    if (!email || !password) {
+        req.session.message = 'Merci de remplir tous les champs';
+        res.redirect('/');
+        return;
+    }
+    
+    try {
+        const user = await User.findOne({ email: email });
+        
+        if (user) {
+            const sha256Hasher = crypto.createHmac("sha256", secret);
+            const hashedPassword = sha256Hasher.update(password).digest('hex');
+            console.log(hashedPassword)
+            console.log(user.password)
+            if (hashedPassword === user.password) {
+                
+                
+                
+                console.log(email)
+                res.redirect('/dashboard');
+                return;
+            }
+        }
+        
+        req.session.message = 'Mauvais identifiant ou mot de passe';
+        res.redirect('/login');
+    } catch (err) {
+        res.status(500).json({ error: "Une erreur est survenue lors de la tentative de connexion." });
+    }
+};
 
-//     if(!login || !password) {
-//         req.session.message = 'Merci de remplir tout les champs';
-//         res.redirect('/')
-//         return
-//     }
-
-//     if(login === l && SHA1(password).toString() === p) {
-//         req.session.auth = true;
-//         req.session.message = 'Connexion reussi';
-
-//         res.redirect('/dashboard');
-//         return
-//     }
-
-//     req.session.message = 'Mauvais identifiant'
-//     res.redirect('/')
-// }
 
 const signup = async (req, res) => {
     const { firstname, lastname, email, password } = req.body;
@@ -110,7 +123,6 @@ const signup = async (req, res) => {
             password: hashedPassword
         });
 
-        res.status(201).json({ message: 'Utilisateur enregistré avec succès.' });
         res.redirect("/dashboard")
     } catch (err) {
         res.status(500).json({ error: "Une erreur est survenue lors de l'enregistrement." });
@@ -119,7 +131,7 @@ const signup = async (req, res) => {
 
 export default {
     signup,
-    // login,
+    login,
     viewSignup,
     viewDashboard,
     viewLogin
