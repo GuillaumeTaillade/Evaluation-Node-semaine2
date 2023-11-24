@@ -38,13 +38,55 @@ const viewSignup = (req, res) => {
         res.status(404).send('Page not found');
     }
 };
+
+const viewDashboard = (req, res) => {
+    try {
+        let html = readFileSync(join(htmlPath, 'dashboard.html'), 'utf8');
+        res.status(200).send(html); // Utilisez res.send pour envoyer du HTML brut
+    } catch(err) {
+        res.status(404).send('Page not found');
+    }
+};
+const viewLogin = (req, res) => {
+    try {
+        let html = readFileSync(join(htmlPath, 'login.html'), 'utf8');
+        res.status(200).send(html); // Utilisez res.send pour envoyer du HTML brut
+    } catch(err) {
+        res.status(404).send('Page not found');
+    }
+};
     
+
+// const login = (req,res) => {
+//     const {email, password} = req.body
+//     const {email: e, password: p} = user
+
+//     req.session.auth = false
+
+//     if(!login || !password) {
+//         req.session.message = 'Merci de remplir tout les champs';
+//         res.redirect('/')
+//         return
+//     }
+
+//     if(login === l && SHA1(password).toString() === p) {
+//         req.session.auth = true;
+//         req.session.message = 'Connexion reussi';
+
+//         res.redirect('/dashboard');
+//         return
+//     }
+
+//     req.session.message = 'Mauvais identifiant'
+//     res.redirect('/')
+// }
+
 const signup = async (req, res) => {
     const { firstname, lastname, email, password } = req.body;
     console.log(firstname)
 
     // Vérifiez si tous les champs sont renseignés
-    if (!firstname || !lastname || !email || !password) {
+    if (!firstname ||  !lastname || !email || !password) {
         return res.status(400).json({ error: 'Tous les champs sont obligatoires.' });
     }
 
@@ -69,13 +111,16 @@ const signup = async (req, res) => {
         });
 
         res.status(201).json({ message: 'Utilisateur enregistré avec succès.' });
-        res.redirect(`/dashboard`)
+        res.redirect("/dashboard")
     } catch (err) {
-        res.status(500).json({ error: 'Une erreur est survenue lors de l\'enregistrement.' });
+        res.status(500).json({ error: "Une erreur est survenue lors de l'enregistrement." });
     }
 };
 
 export default {
     signup,
-    viewSignup
+    // login,
+    viewSignup,
+    viewDashboard,
+    viewLogin
 }
