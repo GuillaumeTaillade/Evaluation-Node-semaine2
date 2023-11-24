@@ -1,10 +1,10 @@
 import crypto from "crypto";
-import {userSchema} from "modeles/userModele.js"
+import userSchema from "../modeles/userModele.js"
 
 
 
 
-export const signup = (req, res, next)=>{
+ const signup = (req, res, next)=>{
     const secret = process.env.Secret_Crypto
     const password = req.body.password
     const sha256Hasher = crypto.createHmac("sha256", secret );
@@ -28,3 +28,6 @@ export const signup = (req, res, next)=>{
     
 
 
+export default {
+    signup
+}
